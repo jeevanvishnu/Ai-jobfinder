@@ -1,6 +1,11 @@
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../components/layout/DashboardLayout';
+import {  useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+import { uploadResume } from '../features/DashboardSlice';
+
+import type { RootState, AppDispatch } from '../app/Store';
 import {
   CloudUpload,
   FolderOpen,
@@ -41,6 +46,18 @@ const formatFileSize = (fileSize: number) => {
 const UploadResume = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error, resume } = useSelector((state: RootState) => state.dashboard);
+
+  // write a function to handle the upload resume
+  const handleUpload = () => {
+    if (!selectedFile) {
+      toast.error('Please select a file to upload.');
+      return;
+    }
+    dispatch(uploadResume(selectedFile));
+  };
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const dragDepthRef = useRef(0);
 
@@ -219,6 +236,12 @@ const UploadResume = () => {
             </div>
             <button className="bg-transparent border border-dashed border-gray-300 rounded-lg px-4 py-2.5 flex items-center gap-2 text-[14px] font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
               <Plus size={16} /> Add Skill
+            </button>
+          </div>
+
+          <div className="mt-8 flex justify-end">
+            <button onClick={handleUpload} className="bg-[#2563EB] hover:bg-blue-600 text-white px-7 py-3 rounded-lg font-semibold text-[15px] transition-colors shadow-sm">
+              Analyze Resume
             </button>
           </div>
         </div>

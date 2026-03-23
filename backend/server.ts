@@ -6,6 +6,7 @@ import authRoutes from "./src/routes/auth.router.ts"
 import cors from "cors";
 import passport from "./src/config/passport.ts";
 import session from "express-session";
+import dashboardRoutes from "./src/routes/dashboard.route.ts";
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -29,8 +30,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // body parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({limit:"10mb"}));
+app.use(express.urlencoded({ extended: true,limit:"10mb" }));
 
 // helmet for using security headers
 app.use(helmet());
@@ -40,6 +41,7 @@ app.use(cookieParser());
 
 // routes
 app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 
 function startServer() {
