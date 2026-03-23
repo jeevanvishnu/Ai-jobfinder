@@ -1,27 +1,18 @@
 import type { Request , Response } from "express";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const pdf = require("pdf-parse");
-import { OpenAI } from "openai";
+import { PDFParse } from "pdf-parse";
 import { prompt } from "../config/prompt.ts";
+import { OpenRouter } from "@openrouter/sdk";
+import 'dotenv/config';
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
 
 
 export const uploadResume = async (req: Request , res: Response) => {
     try {
-        const openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
-        
-        // openai api key
-        if(!process.env.OPENAI_API_KEY){
-            return res.status(500).json({message: "OpenAI API key is not configured"});
+        // OpenRouter API key
+        if(!process.env.OPENROUTER_API_KEY){
+            return res.status(500).json({message: "OpenRouter API key is not configured"});
         }
 
-        let resumeText = "";
         const file = req.file;
         if(!file){
             return res.status(400).json({message: "No file uploaded"});
@@ -32,31 +23,57 @@ export const uploadResume = async (req: Request , res: Response) => {
         }
 
         const buffer = file.buffer;
-        const data = await pdf(buffer);
-        resumeText = data.text;
-        console.log(resumeText);
+        if(!buffer){
+            return res.status(400).json({message: "Unable to read uploaded file"});
+        }
+
+        const parser = new PDFParse({ data: buffer });
+        let resumeText = "";
+        try {
+            const data = await parser.getText();
+            resumeText = data.text?.trim() ?? "";
+        } finally {
+            await parser.destroy();
+        }
 
 
         if(!resumeText){
             return res.status(400).json({message: "No text found in the resume"});
         }
 
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            input: prompt + resumeText,
-            
-        });
-        const rawResponse = await response.output_text
-        let parsedSkills = [];
-        try {
-            parsedSkills = JSON.parse(rawResponse);
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({message: "Failed to parse skills"});
-        }
+        // implement openrouter sdk
+        const openRouter = new OpenRouter({
+      apiKey: process.env.OPENROUTER_API_KEY!,
+    });
+
+    const completion = await openRouter.chat.completions.create({
+      model: "openai/gpt-oss-120b:free",
+      messages: [
+        {
+          role: "user",
+          content: `Analyze this resume and extract skills:\n${resumeText}`,
+        },
+      ],
+    });
+
+    const rawResponse =
+      completion.choices?.[0]?.message?.content || "";
+
+    if (!rawResponse) {
+      return res.status(502).json({
+        message: "AI provider returned an empty response",
+      });
+    }
+
+    return res.status(200).json({ rawResponse });
         
     } catch (error) {
         console.log(error);
-        res.status(500).json({message: "Internal server error"});
+        if (error instanceof Error) {
+            return res.status(error.status ?? 502).json({
+                message: error.message || "AI provider request failed",
+            });
+        }
+        return res.status(500).json({message: "Internal server error"});
     }
 }

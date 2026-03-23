@@ -1,11 +1,10 @@
 import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import {  useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { uploadResume } from '../features/DashboardSlice';
 
-import type { RootState, AppDispatch } from '../app/Store';
+import type { AppDispatch, RootState } from '../app/Store';
 import {
   CloudUpload,
   FolderOpen,
@@ -48,7 +47,8 @@ const UploadResume = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, error, resume } = useSelector((state: RootState) => state.dashboard);
+  const { resume, loading, error } = useSelector((state: RootState) => state.dashboard);
+  const extractedSkills: string[] | null = resume && typeof resume === 'object' && 'skills' in resume ? (resume as any).skills : null;
 
   // write a function to handle the upload resume
   const handleUpload = () => {
@@ -210,38 +210,48 @@ const UploadResume = () => {
           </div>
 
           <div className="flex flex-wrap gap-3 mt-6">
-            <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
-              <Code size={16} className="text-gray-500" /> Python
-            </div>
-            <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
-              <Monitor size={16} className="text-gray-500" /> React
-            </div>
-            <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
-              <Layout size={16} className="text-gray-500" /> UI Design
-            </div>
-            <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
-              <Database size={16} className="text-gray-500" /> SQL
-            </div>
-            <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
-              <Cpu size={16} className="text-gray-500" /> Machine Learning
-            </div>
-            <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
-              <ClipboardList size={16} className="text-gray-500" /> Project Management
-            </div>
-            <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
-              <LineChart size={16} className="text-gray-500" /> Data Analysis
-            </div>
-            <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
-              <Code2 size={16} className="text-gray-500" /> TypeScript
-            </div>
+            {extractedSkills ? (
+              extractedSkills.map((skill, index) => (
+                <div key={index} className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <BadgeCheck size={16} className="text-[#2563EB]" /> {skill}
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <Code size={16} className="text-gray-500" /> Python
+                </div>
+                <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <Monitor size={16} className="text-gray-500" /> React
+                </div>
+                <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <Layout size={16} className="text-gray-500" /> UI Design
+                </div>
+                <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <Database size={16} className="text-gray-500" /> SQL
+                </div>
+                <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <Cpu size={16} className="text-gray-500" /> Machine Learning
+                </div>
+                <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <ClipboardList size={16} className="text-gray-500" /> Project Management
+                </div>
+                <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <LineChart size={16} className="text-gray-500" /> Data Analysis
+                </div>
+                <div className="bg-[#F8F9FB] border border-gray-100 rounded-lg px-4 py-2.5 flex items-center gap-2.5 text-[14px] font-semibold text-gray-700">
+                  <Code2 size={16} className="text-gray-500" /> TypeScript
+                </div>
+              </>
+            )}
             <button className="bg-transparent border border-dashed border-gray-300 rounded-lg px-4 py-2.5 flex items-center gap-2 text-[14px] font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
               <Plus size={16} /> Add Skill
             </button>
           </div>
 
           <div className="mt-8 flex justify-end">
-            <button onClick={handleUpload} className="bg-[#2563EB] hover:bg-blue-600 text-white px-7 py-3 rounded-lg font-semibold text-[15px] transition-colors shadow-sm">
-              Analyze Resume
+            <button disabled={loading} onClick={handleUpload} className="bg-[#2563EB] disabled:bg-blue-400 disabled:cursor-not-allowed hover:bg-blue-600 text-white px-7 py-3 rounded-lg font-semibold text-[15px] transition-colors shadow-sm">
+              {loading ? 'Analyzing...' : 'Analyze Resume'}
             </button>
           </div>
         </div>
